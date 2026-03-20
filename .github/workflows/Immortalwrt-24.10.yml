@@ -16,11 +16,18 @@ env:
   DIY_P2_SH: N1/Immortalwrt/diy-part2.sh
   FILES: N1/Immortalwrt/files
   TZ: Asia/Shanghai
-  GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
 
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: write
+
+    env:
+      DATE: "dummy"
+      tag_name: "dummy"
+      UPLOAD_RELEASE: 'true'
 
     steps:
     - name: 创建编译空间挂载点
@@ -42,7 +49,8 @@ jobs:
         remove-docker-images: 'true'
 
     - name: 检查Actions
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
+
 
     - name: 检查服务器配置
       run: |
@@ -68,12 +76,12 @@ jobs:
       run: |
         sudo -E apt-get -qq update -y
         sudo -E apt-get -qq install -y $(curl -fsSL https://raw.githubusercontent.com/woni928/OpenWrt-N1/refs/heads/main/N1/Immortalwrt/2410)
+        sudo -E apt-get -qq install -y ccache
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         echo "硬盘详情："
         df -Th
-
 
     - name: 克隆源码
       working-directory: /workdir
@@ -84,7 +92,7 @@ jobs:
         cd openwrt
         useVersionInfo=$(git show -s --date=short --format="date: %cd<br/>commit: %s<br/>commit hash: %H")
         echo "useVersionInfo=$useVersionInfo" >> $GITHUB_ENV
-        echo "DATE=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+        echo "DATE=$(date \"+%Y-%m-%d %H:%M:%S\")" >> $GITHUB_ENV
         echo "tag_name=$(date +%Y%m%d)" >> $GITHUB_ENV
 
     - name: 加载DIY_P1
@@ -123,8 +131,13 @@ jobs:
       id: compile
       run: |
         cd openwrt
+        export PATH="/usr/lib/ccache:$PATH"
+        export CCACHE_DIR="$HOME/.ccache"
+        ccache -M 2G
+        ccache -z
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
+        ccache -s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
@@ -167,12 +180,17 @@ jobs:
     - name: 整理文件
       run: mv /opt/openwrt_packit/output/* /workdir/upload/
       
-
     - name: 发布固件
+      id: create_release
+      run: |
+        echo "RELEASE_DATE=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+        echo "RELEASE_TAG=N1-24.10_$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+
+    - name: 上传发布
       uses: ncipollo/release-action@v1
       with:
-        name: OpenWrt-N1 → ${{ env.DATE }}
-        tag: N1-24.10_${{ env.tag_name }}
+        name: "OpenWrt-N1 ${{ steps.create_release.outputs.RELEASE_DATE }}"
+        tag: "${{ steps.create_release.outputs.RELEASE_TAG }}"
         artifacts: /workdir/upload/openwrt*
         allowUpdates: true
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -187,19 +205,39 @@ jobs:
               密码：password
 
               更新日志：
-              2025-0928：本固件所含插件，请看主页图片。
-
+              2026-0320：本固件所含插件，请看主页图片-24.10。波浪线 日期的显示---
+              
     - name: 删除运行记录
-      uses: Mattraks/delete-workflow-runs@main
+      uses: Mattraks/delete-workflow-runs@v2
       with:
         retain_days: 3
         keep_minimum_runs: 5
-        token: ${{ env.GITHUB_TOKEN }}		
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 删除自动发布的旧固件
-      uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      uses: actions/github-script@v7
       with:
-        keep_latest: 7
-        delete_tags : true
-        
+        script: |
+          const releases = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          const keepLatest = 7;
+          releases.data.forEach((release, index) => {
+            if (index >= keepLatest) {
+              github.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.id
+              });
+              if (release.tag_name) {
+                github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/${release.tag_name}`
+                }).catch(() => {});
+              }
+            }
+          });
