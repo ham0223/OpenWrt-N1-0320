@@ -6,6 +6,10 @@ sed -i 's/192.168.1.1/192.168.123.2/g' package/base-files/files/bin/config_gener
 sed -i 's/ImmortalWrt/OpenWrt/g' package/base-files/files/bin/config_generate
 
 
+# Passwall feeds (在 feeds install -a 之后单独更新，避免覆盖 immortalwrt 官方包)
+./scripts/feeds update -a -p passwall -p passwall_packages
+./scripts/feeds install -a -p passwall -p passwall_packages
+
 # 备用科学插件：移除 openwrt feeds 自带的核心包
 rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box}
 git clone https://github.com/sbwml/openwrt_helloworld package/helloworld
