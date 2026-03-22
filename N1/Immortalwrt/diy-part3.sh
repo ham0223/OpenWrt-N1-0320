@@ -21,12 +21,7 @@ git clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/
 # 移除 openwrt feeds 过时的luci版本
 rm -rf feeds/luci/applications/luci-app-passwall
 git clone https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
-# Passwall2
-rm -rf feeds/luci/applications/luci-app-passwall2
-git clone https://github.com/Openwrt-Passwall/openwrt-passwall2 package/passwall2-luci
 
-
-# 删除及其拉取源码
 git clone https://github.com/ophub/luci-app-amlogic --depth=1 package/amlogic
 git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
 rm -rf feeds/luci/applications/luci-app-mosdns feeds/packages/net/mosdns

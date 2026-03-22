@@ -53,15 +53,7 @@ jobs:
     - name: 检查Actions
       uses: actions/checkout@v4
 
-    - name: 缓存ccache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.ccache
-          /workdir/openwrt/tmp
-        key: openwrt-ccache-25.12-${{ hashFiles('N1/Immortalwrt/*.config') }}
-        restore-keys: |
-          openwrt-ccache-25.12-
+
 
     - name: 检查服务器配置
       run: |
@@ -127,6 +119,16 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    - name: 缓存ccache和下载包
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.ccache
+          /workdir/openwrt/dl
+        key: openwrt-build-${{ hashFiles('N1/Immortalwrt/*.config') }}
+        restore-keys: |
+          openwrt-build-
+
     - name: 下载软件包
       id: package
       run: |
@@ -144,7 +146,7 @@ jobs:
         cd openwrt
         export PATH="/usr/lib/ccache:$PATH"
         export CCACHE_DIR="$HOME/.ccache"
-        ccache -M 2G
+        ccache -M 5G
         ccache -z
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
@@ -215,8 +217,8 @@ jobs:
               密码：password
 
               更新日志：
-              2026-0322：12个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall/Passwall2）
-              源码：immortalwrt openwrt-25.12
+              2026-0322：11个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall）
+              优化ccache缓存，加快二次编译速度
 
     - name: 删除运行记录
       uses: Mattraks/delete-workflow-runs@v2
