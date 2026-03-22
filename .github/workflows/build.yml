@@ -11,7 +11,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-25.12
+  REPO_BRANCH: openwrt-24.10
   FEEDS_CONF: N1/Immortalwrt/25.12-TL-feeds.conf.default
   CONFIG_FILE: N1/Immortalwrt/nan-25.12.config
   DIY_P1_SH: N1/Immortalwrt/diy-part1.sh
@@ -86,7 +86,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo -E apt-get -qq update -y
-        sudo -E apt-get -qq install -y $(curl -fsSL https://raw.githubusercontent.com/woni928/OpenWrt-N1/refs/heads/main/N1/Immortalwrt/2410)
+        sudo -E apt-get -qq install -y $(curl -fsSL https://raw.githubusercontent.com/ham0223/OpenWrt-N1-0320/main/N1/Immortalwrt/2410)
         sudo -E apt-get -qq install -y ccache
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
@@ -215,7 +215,7 @@ jobs:
               密码：password
 
               更新日志：
-              2026-0320：10个插件编译测试
+              2026-0322：12个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall/Passwall2）
 
     - name: 删除运行记录
       uses: Mattraks/delete-workflow-runs@v2
