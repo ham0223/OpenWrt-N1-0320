@@ -217,7 +217,7 @@ jobs:
               密码：password
 
               更新日志：
-              2026-0322：11个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall）
+              2026-0323：11个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall）
               优化ccache缓存，加快二次编译速度
 
     - name: 删除运行记录
