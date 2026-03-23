@@ -4,10 +4,10 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
-  push:
-    branches:
-      - main
-      - master
+  # push:      # 已关闭自动触发，需手动在 Actions 页面点击 Run workflow
+  #   branches:
+  #     - main
+  #     - master
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
@@ -217,7 +217,7 @@ jobs:
               密码：password
 
               更新日志：
-              2026-0323：11个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall）
+              2026-0322：11个插件编译测试（PPPOE/WIFI/SSH/TTYD/AdGuardHome/mosdns/OpenClash/Nikki/Lucky/OpenList/Passwall）
               优化ccache缓存，加快二次编译速度
 
     - name: 删除运行记录
